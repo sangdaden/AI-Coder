@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arena Duel — 3D FPS</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="overlay">
+    <div class="panel">
+      <h1>Arena Duel</h1>
+      <p class="tagline">1v1 — Hard mode: fast bot, burst fire, 130 HP</p>
+      <ul class="controls">
+        <li><kbd>↑</kbd> <kbd>↓</kbd> Di chuyển / Move</li>
+        <li><kbd>←</kbd> <kbd>→</kbd> Xoay / Turn</li>
+        <li><kbd>Space</kbd> Bắn / Shoot</li>
+      </ul>
+      <button id="start-btn" type="button" disabled>Bắt đầu / Start</button>
+      <p id="load-error" class="load-error" hidden>
+        Không tải được Three.js. Đảm bảo file <code>three.min.js</code> nằm cùng thư mục với <code>index.html</code>.
+      </p>
+      <p class="hint">Mở bằng double-click <code>index.html</code> (không cần internet).</p>
+    </div>
+  </div>
+
+  <div id="hud" class="hidden">
+    <div id="damage-vignette" class="damage-vignette"></div>
+
+    <header class="hud-top">
+      <div class="hud-card player-card">
+        <div class="card-head">
+          <span class="avatar player-avatar" aria-hidden="true"></span>
+          <div class="card-titles">
+            <span class="card-name">YOU</span>
+            <span id="player-hp-text" class="hp-num">100 / 100</span>
+          </div>
+        </div>
+        <div class="bar-track">
+          <div id="player-hp" class="bar-fill player" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <span id="match-timer" class="match-timer">00:00</span>
+        <span id="enemy-alert" class="enemy-alert hidden">⚠ HOSTILE</span>
+        <span class="diff-badge">HARD</span>
+      </div>
+
+      <div class="hud-card enemy-card">
+        <div class="card-head">
+          <div class="card-titles align-end">
+            <span class="card-name enemy-name">RAIDER-01</span>
+            <span id="enemy-hp-text" class="hp-num">130 / 130</span>
+          </div>
+          <span class="avatar enemy-avatar" aria-hidden="true"></span>
+        </div>
+        <div class="bar-track">
+          <div id="enemy-hp" class="bar-fill enemy" style="width: 100%"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="hud-reticle" aria-hidden="true">
+      <div class="reticle-ring"></div>
+      <div class="reticle-line v"></div>
+      <div class="reticle-line h"></div>
+      <div class="reticle-dot"></div>
+      <div id="hit-marker" class="hit-marker"></div>
+    </div>
+
+    <footer class="hud-bottom">
+      <div class="weapon-panel">
+        <div class="weapon-row">
+          <span class="weapon-label">WEAPON</span>
+          <span class="weapon-name">PULSE RIFLE</span>
+        </div>
+        <div class="reload-track">
+          <div id="reload-fill" class="reload-fill"></div>
+        </div>
+        <span id="weapon-status" class="weapon-status ready">READY — SPACE</span>
+      </div>
+
+      <div class="hud-stats">
+        <div class="stat-pill">
+          <span class="pill-label">Hits</span>
+          <span id="hits-count" class="pill-value">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">Bot</span>
+          <span id="enemy-state" class="pill-value state-scan">SCANNING</span>
+        </div>
+        <div class="stat-pill">
+          <span class="pill-label">Range</span>
+          <span id="enemy-range" class="pill-value">—</span>
+        </div>
+      </div>
+
+      <div class="minimap-wrap">
+        <span class="minimap-label">RADAR</span>
+        <canvas id="minimap" width="110" height="110"></canvas>
+      </div>
+    </footer>
+
+    <div id="message"></div>
+  </div>
+
+  <canvas id="game"></canvas>
+
+  <script>
+    (function () {
+      var THREE_SOURCES = [
+        "three.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"
+      ];
+      var sourceIndex = 0;
+
+      function showLoadError() {
+        var err = document.getElementById("load-error");
+        if (err) err.hidden = false;
+      }
+
+      function enableStart() {
+        var btn = document.getElementById("start-btn");
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Bắt đầu / Start";
+        }
+      }
+
+      function loadGame() {
+        var script = document.createElement("script");
+        script.src = "game.js";
+        script.onerror = showLoadError;
+        document.body.appendChild(script);
+      }
+
+      function tryNextSource() {
+        sourceIndex += 1;
+        if (sourceIndex < THREE_SOURCES.length) {
+          loadThree(THREE_SOURCES[sourceIndex]);
+        } else {
+          showLoadError();
+        }
+      }
+
+      function loadThree(src) {
+        var script = document.createElement("script");
+        script.src = src;
+        script.onload = function () {
+          if (typeof THREE === "undefined") {
+            tryNextSource();
+            return;
+          }
+          enableStart();
+          loadGame();
+        };
+        script.onerror = tryNextSource;
+        document.head.appendChild(script);
+      }
+
+      loadThree(THREE_SOURCES[0]);
+    })();
+  </script>
+</body>
+</html>
